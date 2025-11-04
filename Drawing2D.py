@@ -1,11 +1,13 @@
 from PIL import Image, ImageTk, ImageDraw
 import customtkinter as ctk
+from tkinter import messagebox
 import math
+import os
 
-class EiffelTower:
+class Draw:
     def __init__(self, master):
         self.master = master
-        master.title("Eiffel Tower 2.5D Drawing")
+        master.title("2D Drawing")
         master.resizable(False, False)
 
         self.width = 1280   # ancho de la ventana
@@ -16,6 +18,15 @@ class EiffelTower:
         
         self.canvas = ctk.CTkCanvas(master, width= self.width, height= self.height, bg= "#F0F0F0")  # donde se encapsulara pillow_image 
         self.canvas.pack()
+        
+        self.load_button = ctk.CTkButton(master, text="Cargar modelo (.txt)", command= self.cargar_modelo)  # boton para seleccionar modelo .txt
+        self.load_button.place(x=20, y=20)  
+        
+        self.change_button = ctk.CTkButton(master, text="Tranformar modelo (.obj)", command= self.convert_obj_a_modelo)
+        self.change_button.place(x=180, y=20)  
+        
+        self.controls = ctk.CTkLabel(master, text="Move:  Arrastrar click derecho\n\nZoom:  Rueda de scroll", fg_color= "#f0f0f0", text_color= "black", justify= "left")
+        self.controls.place(x= 20, y= 360)
         
         self.ctk_image = None   # para almazenar la figura
         self.canvas_image_item = None
@@ -35,10 +46,16 @@ class EiffelTower:
         self.canvas.bind("<MouseWheel>",self.update_scale)
    
         self.vertices_base = [] # coordenadas de todos los vertices
-        self.edges = [] # indice de conexiones
+        self.edges = [] # indice de conexiones      
         
-        self.load_model("models/torre_pisa.txt")
-        self.draw_model()
+    def cargar_modelo(self):    # funcion para cargar el modelo .txt
+        ruta = ctk.filedialog.askopenfilename(title="Seleccionar archivo de modelo", filetypes=[("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*")])
+        if ruta:
+            self.load_model(ruta)
+            self.draw_model()
+    
+    def convertir_obj(self):
+        pass
         
     def on_mouse_press(self, event):    # funcion de sostener click
         self.is_dragging = True
@@ -62,9 +79,13 @@ class EiffelTower:
      
     def update_scale(self, event):    # funcion de escalado
         if event.num == 4 or event.delta > 0:  
-            if self.scale >= 0.2:
+            if self.scale > 0.1:
                 self.scale += -0.1 
                 self.draw_model()
+            elif self.scale > 0.01:
+                self.scale += -0.01 
+            elif self.scale > 0.001:
+                self.scale += -0.0001  
         elif event.num == 5 or event.delta < 0:  
             self.scale += 0.1
             self.draw_model()
@@ -143,8 +164,52 @@ class EiffelTower:
             self.canvas.itemconfig(self.canvas_image_item, image= self.ctk_image)
         else:
             self.canvas_image_item = self.canvas.create_image(0, 0, anchor= "nw", image=self.ctk_image)
-                
-root = ctk.CTk()        
-app = EiffelTower(root) 
-root.mainloop()
+
+    def convert_obj_a_modelo(self):
+        ruta = ctk.filedialog.askopenfilename(
+            title="Seleccionar archivo de modelo",
+            filetypes=[(".obj", "*.obj"), ("Todos los archivos", "*.*")]
+        )
+        if not ruta:
+            return
+
+        models_dir = os.path.join(os.getcwd(), "models")
+        os.makedirs(models_dir, exist_ok=True)
+
+        try:
+            nombre_archivo = os.path.splitext(os.path.basename(ruta))[0] + "_converted.txt"
+            output_filename = os.path.join(models_dir, nombre_archivo)
+
+            vertices = []
+            edges = set()
+
+            with open(ruta, "r") as f:
+                for line in f:
+                    parts = line.strip().split()
+                    if not parts or parts[0].startswith("#"):
+                        continue
+
+                    if parts[0] == "v":
+                        x, y, z = map(float, parts[1:])
+                        vertices.append((x, y, z))
+
+                    elif parts[0] == "f":
+                        indices = [int(p.split("/")[0]) for p in parts[1:]]
+                        for i in range(len(indices)):
+                            a = indices[i]
+                            b = indices[(i + 1) % len(indices)]
+                            edges.add(tuple(sorted((a, b))))
+
+            with open(output_filename, "w") as out:
+                for v in vertices:
+                    out.write(f"v {v[0]} {v[1]} {v[2]}\n")
+                for e in sorted(edges):
+                    out.write(f"e {e[0]} {e[1]}\n")
+        except Exception as e:
+            messagebox.showerror("Error al convertir", f"Ocurrio un error:\n{e}")
+
+
+
+
+
        

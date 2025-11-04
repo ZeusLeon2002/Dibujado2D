@@ -17,8 +17,8 @@ Furthermore, it supports loading external models from .txt files (generated or c
 
 ## Authors
 
-ex. Raúl Arath León López - C22760499
-ex. [ZeusLeon](https://github.com/ZeusLeon2002)
+* ex. Raúl Arath León López - C22760499
+* ex. [ZeusLeon](https://github.com/ZeusLeon2002)
 
 ## Version History
 * 0.1
