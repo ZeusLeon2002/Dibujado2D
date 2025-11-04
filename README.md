@@ -1,4 +1,4 @@
-# Dibujado 2.5D
+# Dibujado de modelo 3D a 2D
 
 ## Description
 

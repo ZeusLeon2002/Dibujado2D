@@ -37,7 +37,7 @@ class EiffelTower:
         self.vertices_base = [] # coordenadas de todos los vertices
         self.edges = [] # indice de conexiones
         
-        self.load_model("torre_pisa.txt")
+        self.load_model("models/torre_pisa.txt")
         self.draw_model()
         
     def on_mouse_press(self, event):    # funcion de sostener click
